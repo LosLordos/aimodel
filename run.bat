@@ -31,14 +31,21 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: 4. Install Dependencies
+:: 4. Check for critical files
+if not exist config.py (
+    echo ERROR: config.py is missing!
+    pause
+    exit /b
+)
+
+:: 5. Install Dependencies
 echo Checking/Installing requirements...
 pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo WARNING: Some requirements failed to install.
 )
 
-:: 5. Run the Application
+:: 6. Run the Application
 echo Launching application...
 echo ---------------------------------------
 echo Open your browser at: http://127.0.0.1:5001

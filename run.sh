@@ -17,11 +17,18 @@ fi
 # 3. Activate
 source venv/bin/activate || { echo "Failed to activate venv"; read -p "Press enter to exit"; exit 1; }
 
-# 4. Install
+# 4. Check files
+if [ ! -f "config.py" ]; then
+    echo "ERROR: config.py missing!"
+    read -p "Press enter to exit"
+    exit 1
+fi
+
+# 5. Install
 echo "Checking requirements..."
 pip install -r requirements.txt
 
-# 5. Run
+# 6. Run
 echo "Launching application on http://127.0.0.1:5001"
 python3 app.py
 

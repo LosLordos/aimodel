@@ -97,7 +97,7 @@
             width: 100%;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white;
+            color: #ffffff; /* Explicitně bílá barva textu */
             padding: 1.2rem;
             border-radius: 12px;
             font-size: 1.1rem;
@@ -105,6 +105,12 @@
             cursor: pointer;
             transition: all 0.3s;
             appearance: none;
+        }
+
+        /* Oprava barev pro vnitřní prvky (options) */
+        option {
+            background-color: #1c2230; /* Tmavé pozadí pro seznam */
+            color: #ffffff;           /* Bílý text */
         }
 
         select:focus {
