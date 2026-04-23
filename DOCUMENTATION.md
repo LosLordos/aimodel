@@ -1,6 +1,39 @@
-# Detailní technická dokumentace HockeyMatch AI
+# HockeyMatch AI - Predikční systém Tipsport Extraligy
 
-Tento dokument poskytuje hloubkový pohled na algoritmy a logiku použitou v projektu.
+Tento projekt je komplexní systém využívající strojové učení (AI) k analýze a predikci výsledků hokejových zápasů české Tipsport Extraligy.
+
+---
+
+## 1. Use Case (Případy užití)
+
+Tento projekt slouží k několika hlavním účelům:
+*   **Analytický nástroj pro fanoušky**: Poskytuje objektivní pohled na sílu týmů založený na datech, nikoliv na emocích.
+*   **Predikce výsledků**: Odhaduje pravděpodobného vítěze a nejpravděpodobnější skóre zápasu.
+*   **Automatizace dat**: Ukazuje, jak automaticky sbírat sportovní výsledky z webu a transformovat je do užitečných statistik (forma, H2H).
+*   **Demonstrace AI**: Slouží jako ukázka kompletního cyklu strojového učení (Sběr -> Zpracování -> Učení -> Aplikace).
+
+---
+
+## 2. Jak projekt funguje (Architektura)
+
+Celý systém je rozdělen do čtyř logických fází, které na sebe navazují:
+
+### Fáze A: Sběr dat (`crawler.py`)
+*   Program se připojí na hokejové portály a stáhne surové výsledky zápasů (kdo, s kým, kdy a kolik).
+*   Výsledkem je základní databáze zápasů.
+
+### Fáze B: Inženýrství příznaků (`dataset_builder.py`)
+*   Surová data (např. 3:2) se změní na chytré statistiky.
+*   Vypočítá se **forma** (úspěšnost v posledních 10 zápasech), **historická bilance (H2H)** a **střelecká potence** obou týmů v daný moment.
+
+### Fáze C: Trénování mozku (`preprocess.py` & `train_model.py`)
+*   Data se převedou do číselné podoby, které rozumí počítač.
+*   Model **Gradient Boosting** se "učí" z tisíců odehraných zápasů a hledá v nich vzorce, které vedou k výhře.
+*   Výsledné "znalosti" se uloží do souborů ve složce `models/`.
+
+### Fáze D: Predikce a Web (`predict.py` & `app.py`)
+*   Webová aplikace přijme od uživatele dva týmy.
+*   `predict.py` vytáhne jejich aktuální formu, pošle ji do modelu a ten vrátí procentuální šanci na výhru.
 
 ---
 
