@@ -4,22 +4,24 @@ Tento dokument slouží jako hlavní průvodce projektem HockeyMatch AI. Obsahuj
 
 ---
 
-## 1. Účel projektu (Use Case)
-Projekt byl vytvořen s cílem demonstrovat sílu strojového učení v oblasti sportovní analytiky.
-*   **Analýza výkonnosti**: Sledování formy týmů české Tipsport Extraligy.
-*   **Predikce výsledků**: Odhadování pravděpodobnosti výhry na základě historických dat (sezóny 2023–2025).
-*   **Automatizace**: Od sběru dat (scraping) až po webovou vizualizaci bez nutnosti ručního zásahu.
+## 1. Účel projektu a Use Case (Případy užití)
+Projekt byl vytvořen s cílem demonstrovat sílu strojového učení v oblasti sportovní analytiky. Zde jsou konkrétní situace, kde systém najde uplatnění:
+
+*   **Předzápasová analýza pro fanoušky**: Uživatel chce vědět, zda má jeho oblíbený tým šanci proti silnému soupeři na základě historie, a ne jen na základě emocí.
+*   **Identifikace "formy"**: Systém odhalí týmy, které mají v posledních zápasech vzestupnou tendenci, i když jsou v tabulce nízko.
+*   **Odhad vývoje skóre**: Díky analýze průměrů gólů dokáže systém odhadnout, zda bude zápas defenzivní (málo gólů) nebo ofenzivní.
+*   **Vzdělávací účely**: Ukázka toho, jak v reálném světě propojit Web Scraping, Data Science a Web Development do jednoho funkčního celku.
 
 ---
 
-## 2. Architektura systému (Workflow)
-Projekt se skládá z pěti logických kroků, které tvoří uzavřený cyklus:
+## 2. Jak projekt funguje (Workflow & Příklad)
+Systém nefunguje jen jako statická databáze, ale jako dynamický proces. Představme si situaci, kdy chcete predikovat zápas **Sparta vs. Pardubice**:
 
-1.  **Sběr dat (`crawler.py`)**: Stahování surových výsledků z webu hokej.cz.
-2.  **Inženýrství příznaků (`dataset_builder.py`)**: Výpočet pokročilých metrik (forma, H2H, průměry gólů).
-3.  **Příprava pro AI (`preprocess.py`)**: Čištění dat a kódování názvů týmů na čísla.
-4.  **Trénování modelu (`train_model.py`)**: Vytvoření "mozku" aplikace pomocí algoritmu Gradient Boosting.
-5.  **Aplikace (`app.py` & `predict.py`)**: Interaktivní webové rozhraní pro uživatele.
+1.  **Sběr dat (`crawler.py`)**: Systém projede web hokej.cz a zjistí, že včera Sparta vyhrála 4:1 a Pardubice prohrály 0:2.
+2.  **Výpočet statistik (`dataset_builder.py`)**: Tato nová data se započítají do "Formy". Sparta má teď formu např. 0.8 (vysoká), Pardubice 0.4 (pokles).
+3.  **Vstup do AI (`predict.py`)**: Uživatel vybere tyto dva týmy na webu. Skript `predict.py` vytáhne tyto čerstvé statistiky a vytvoří "vstupní lístek" pro model.
+4.  **Verdikt modelu (`hockey_model.pkl`)**: Model Gradient Boosting porovná tento lístek s tisíci zápasy, které už zná z minulosti, a vypočítá: *"V 72 % případů s těmito parametry vyhrál domácí tým."*
+5.  **Zobrazení výsledku**: Webové rozhraní vám ukáže vítěze, procentuální jistotu a předpokládaný výsledek (např. 3:1).
 
 ---
 
