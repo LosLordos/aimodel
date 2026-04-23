@@ -2,16 +2,17 @@ import joblib
 import pandas as pd
 import numpy as np
 import os
+from config import Config
 
 class HockeyPredictor:
     def __init__(self):
         try:
-            self.model = joblib.load('models/hockey_model.pkl')
-            self.encoder = joblib.load('models/team_encoder.pkl')
-            self.feature_names = joblib.load('models/feature_names.pkl')
-            self.df_featured = pd.read_csv('data/matches1.csv')
+            self.model = joblib.load(Config.MODEL_FILE)
+            self.encoder = joblib.load(Config.ENCODER_FILE)
+            self.feature_names = joblib.load(Config.FEATURES_FILE)
+            self.df_featured = pd.read_csv(Config.MATCHES_FILE)
         except FileNotFoundError:
-            print("Error: Model or Data files not found. Please run training first.")
+            print(f"Error: Required files not found in {Config.MODELS_DIR} or {Config.DATA_DIR}")
             exit(1)
 
     def get_latest_stats(self, team_name):

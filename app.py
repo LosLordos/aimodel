@@ -1,13 +1,16 @@
 from flask import Flask, render_template, request, jsonify
 from predict import HockeyPredictor
+from config import Config
 import os
 
 app = Flask(__name__)
+app.config.from_object(Config)
+
 predictor = HockeyPredictor()
 
 @app.route('/')
 def index():
-    # Get unique teams for the dropdowns
+    # Získání unikátních týmů pro výběr v menu
     teams = sorted(predictor.encoder.classes_)
     return render_template('index.html', teams=teams)
 
@@ -28,4 +31,8 @@ def predict():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(
+        debug=app.config['DEBUG'], 
+        port=app.config['PORT'], 
+        host=app.config['HOST']
+    )
