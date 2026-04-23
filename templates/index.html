@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HockeyMatch AI | Predikce Extraligy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #ff3e3e;
+            --primary-dark: #cc0000;
+            --bg: #0f1115;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass: rgba(255, 255, 255, 0.03);
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent: #00d4ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background: radial-gradient(circle at 50% 0%, #1c2230 0%, #0f1115 100%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, #ff3e3e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .predictor-box {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .matchup {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .team-selector {
+            flex: 1;
+            text-align: center;
+        }
+
+        .team-selector h2 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1.5rem;
+        }
+
+        select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 1.2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            appearance: none;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 62, 62, 0.2);
+        }
+
+        .vs {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            opacity: 0.5;
+            margin-top: 2rem;
+        }
+
+        .btn-predict {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(255, 62, 62, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 62, 62, 0.4);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            margin-top: 4rem;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .winner-card {
+            background: linear-gradient(135deg, rgba(255, 62, 62, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .winner-label {
+            color: var(--text-muted);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+        }
+
+        .winner-name {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .confidence {
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: white;
+        }
+
+        .chart-container {
+            margin-top: 2rem;
+            height: 200px;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Loading Spinner */
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            margin: 2rem auto;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .matchup { flex-direction: column; }
+            .vs { margin: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HockeyMatch AI</h1>
+            <p>Prediktivní analytika pro českou Tipsport Extraligu</p>
+        </header>
+
+        <main>
+            <div class="predictor-box">
+                <div class="matchup">
+                    <div class="team-selector">
+                        <h2>Domácí tým</h2>
+                        <select id="team_a">
+                            {% for team in teams %}
+                            <option value="{{ team }}">{{ team }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="vs">VS</div>
+
+                    <div class="team-selector">
+                        <h2>Hostující tým</h2>
+                        <select id="team_b">
+                            {% for team in teams %}
+                            <option value="{{ team }}" {% if loop.index == 2 %}selected{% endif %}>{{ team }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-predict" onclick="makePrediction()">Předpovědět</button>
+                <div class="loader" id="loader"></div>
+            </div>
+
+            <div class="result-container" id="results">
+                <div class="winner-card">
+                    <div class="winner-label">Předpokládaný vítěz</div>
+                    <div class="winner-name" id="winner-name">---</div>
+                    <div class="confidence" id="confidence-val">0%</div>
+                    
+                    <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem;">
+                        <div class="winner-label">Předpokládané skóre</div>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent);" id="predicted-score">0:0</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="grid-column: span 2; text-align: center; background: rgba(0, 212, 255, 0.05);">
+                        <h3>Vzájemné zápasy (H2H)</h3>
+                        <div style="display: flex; justify-content: space-around; align-items: center;">
+                            <div>
+                                <div class="stat-label">Počet zápasů</div>
+                                <div class="stat-value" id="h2h-count" style="font-size: 1.5rem;">0</div>
+                            </div>
+                            <div>
+                                <div class="stat-label">Úspěšnost domácích</div>
+                                <div class="stat-value" id="h2h-rate" style="font-size: 1.5rem; color: var(--accent);">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="name_a">Tým A</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">Aktuální forma</span>
+                            <span class="stat-value" id="form_a">0.00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Průměr vstřelených gólů</span>
+                            <span class="stat-value" id="avg_s_a">0.00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Průměr inkasovaných gólů</span>
+                            <span class="stat-value" id="avg_c_a">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3 id="name_b">Tým B</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">Aktuální forma</span>
+                            <span class="stat-value" id="form_b">0.00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Průměr vstřelených gólů</span>
+                            <span class="stat-value" id="avg_s_b">0.00</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Průměr inkasovaných gólů</span>
+                            <span class="stat-value" id="avg_c_b">0.00</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="grid-column: span 2; background: rgba(255, 255, 255, 0.02);">
+                        <h3>Poslední vzájemné zápasy</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.9rem;">
+                                    <th style="padding: 1rem; text-align: left;">Datum</th>
+                                    <th style="padding: 1rem; text-align: left;">Domácí</th>
+                                    <th style="padding: 1rem; text-align: center;">Skóre</th>
+                                    <th style="padding: 1rem; text-align: right;">Hosté</th>
+                                </tr>
+                            </thead>
+                            <tbody id="h2h-matches-body">
+                                <!-- Zápasy se vloží sem -->
+                            </tbody>
+                        </table>
+                    </div>
+        </main>
+    </div>
+
+    <script>
+        async function makePrediction() {
+            const teamA = document.getElementById('team_a').value;
+            const teamB = document.getElementById('team_b').value;
+            const results = document.getElementById('results');
+            const loader = document.getElementById('loader');
+
+            results.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ team_a: teamA, team_b: teamB })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Update UI
+                document.getElementById('winner-name').innerText = data.winner;
+                document.getElementById('confidence-val').innerText = data.confidence;
+                document.getElementById('predicted-score').innerText = data.predicted_score;
+                
+                document.getElementById('h2h-count').innerText = data.h2h_count;
+                document.getElementById('h2h-rate').innerText = data.h2h_win_rate;
+
+                // Update H2H Matches table
+                const tableBody = document.getElementById('h2h-matches-body');
+                tableBody.innerHTML = '';
+                data.h2h_matches.forEach(match => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                    row.innerHTML = `
+                        <td style="padding: 1rem; font-size: 0.9rem; color: var(--text-muted);">${match.date}</td>
+                        <td style="padding: 1rem; font-weight: 500;">${match.team_a}</td>
+                        <td style="padding: 1rem; text-align: center; font-weight: 800; color: var(--primary);">${match.score}</td>
+                        <td style="padding: 1rem; text-align: right; font-weight: 500;">${match.team_b}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                document.getElementById('name_a').innerText = data.team_a;
+                document.getElementById('form_a').innerText = data.stats_a.form.toFixed(2);
+                document.getElementById('avg_s_a').innerText = data.stats_a.avg_scored.toFixed(2);
+                document.getElementById('avg_c_a').innerText = data.stats_a.avg_conceded.toFixed(2);
+
+                document.getElementById('name_b').innerText = data.team_b;
+                document.getElementById('form_b').innerText = data.stats_b.form.toFixed(2);
+                document.getElementById('avg_s_b').innerText = data.stats_b.avg_scored.toFixed(2);
+                document.getElementById('avg_c_b').innerText = data.stats_b.avg_conceded.toFixed(2);
+
+                loader.style.display = 'none';
+                results.style.display = 'block';
+                results.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                console.error(err);
+                alert("Něco se pokazilo při komunikaci se serverem.");
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
