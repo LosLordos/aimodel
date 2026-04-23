@@ -154,23 +154,50 @@ import os
 class HockeyPredictor:
     def __init__(self):
         # Inicializace: Načtení natrénovaného modelu a pomocných souborů
-        try:
-            self.model = joblib.load('models/hockey_model.pkl')
-            self.encoder = joblib.load('models/team_encoder.pkl')
-            self.feature_names = joblib.load('models/feature_names.pkl')
-            # Načtení databáze zápasů pro získání aktuální formy
-            self.df_featured = pd.read_csv('data/matches1.csv')
-        except FileNotFoundError:
-            print("Error: Model or Data files not found.")
-            exit(1)
+## 5. Podrobný rozbor kódu predict.py (Srdce aplikace)
 
+Tento skript zajišťuje načtení modelu a výpočet predikcí. Zde je vysvětlení logiky řádek po řádku:
+
+### 1. Importy a Inicializace (Metoda `__init__`)
+*   **Knihovny**: Používáme `joblib` pro načtení natrénovaného "mozku" a `pandas` pro práci s databází zápasů.
+*   **Načítání znalostí**: V konstruktoru se načítají tři klíčové soubory z trénování:
+    *   `hockey_model.pkl`: Samotná umělá inteligence (Gradient Boosting).
+    *   `team_encoder.pkl`: Převodník, který ví, že např. "Sparta" odpovídá číslu 12.
+    *   `feature_names.pkl`: Seznam statistik v přesném pořadí, které model očekává.
+*   **Databáze**: Načítáme `matches1.csv`, abychom mohli v reálném čase zjišťovat aktuální formu týmů.
+
+### 2. Metoda `get_latest_stats` (Hledání formy)
+*   Tato funkce funguje jako "paměť". Podívá se do historie a najde úplně poslední odehraný zápas daného týmu.
+*   Zjistí, zda tým hrál doma nebo venku, a vytáhne jeho aktuální parametry:
+    *   **Forma**: Úspěšnost v posledních 10 zápasech.
+    *   **Avg Scored/Conceded**: Průměrný počet gólů, které tým dává a dostává.
+*   Tyto hodnoty jsou klíčovým vstupem pro dnešní predikci.
+
+### 3. Metoda `get_h2h_stat` (Vzájemná historie)
+*   Hledá všechny zápasy, kde se tito dva soupeři potkali v minulosti (Head-to-Head).
+*   Vypočítá úspěšnost (Win Rate): Výhra = 1, Remíza = 0.5, Prohra = 0.
+*   Výsledné číslo (např. 0.7 pro 70% úspěšnost) dává modelu informaci o tom, zda má jeden tým na druhého "recept".
+
+### 4. Metoda `predict_score` (Odhad skóre)
+*   Zde se nepoužívá AI, ale logický výpočet (heuristika).
+*   Bere se průměr mezi útokem týmu A a obranou týmu B (a naopak).
+*   Výsledek se vynásobí koeficientem formy. Pokud je tým "rozjetý", jeho odhadovaný počet gólů se zvýší.
+
+### 5. Metoda `predict_winner` (Rozhodnutí AI)
+*   Toto je hlavní řídící centrum. Sesbírá data od všech ostatních metod.
+*   **Kódování**: Převede textová jména týmů na čísla, kterým model rozumí.
+*   **Predict Proba**: Model analyzuje všech 11 vstupních parametrů a vrátí pravděpodobnost výhry pro oba týmy.
+*   Vše se zabalí do výsledného balíčku (JSON), který webová aplikace zobrazí uživateli.
+
+---
+
+```python
     def get_latest_stats(self, team_name):
         # Vyhledá poslední zápas týmu a vrátí jeho aktuální statistiky
         team_matches = self.df_featured[
             (self.df_featured['team_a'] == team_name) | 
             (self.df_featured['team_b'] == team_name)
         ].sort_values('date', ascending=False)
-        
         if team_matches.empty: return None
         
         latest = team_matches.iloc[0]
